@@ -178,6 +178,12 @@ func Init() {
 	}
 	// Route docs
 	// router.GET("/api/news/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Route healthz
+	router.GET("/api/files/healthz", func(ctx *gin.Context) {
+		ctx.JSON(200, &res.Response{
+			Success: true,
+		})
+	})
 	// No route
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(404, res.Response{

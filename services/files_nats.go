@@ -134,6 +134,14 @@ func uploadFileClassroom() {
 
 func getAWSTokenAccess() {
 	nats_service.Queue("get_aws_token_access", func(m *nats.Msg) {
+		// Recovery if close channel
+		defer func() {
+			recovery := recover()
+			if recovery != nil {
+				fmt.Printf("A channel closed")
+			}
+		}()
+
 		var filesKeys []string
 
 		data, err := nats_service.DecodeDataNest(m.Data)
@@ -201,6 +209,14 @@ func getKeyFromIdFile() {
 
 func getPermissionsFiles() {
 	nats_service.Queue("get_permissions_files", func(m *nats.Msg) {
+		// Recovery if close channel
+		defer func() {
+			recovery := recover()
+			if recovery != nil {
+				fmt.Printf("A channel closed")
+			}
+		}()
+
 		var dataFile FilePermission
 
 		err := json.Unmarshal(m.Data, &dataFile)
