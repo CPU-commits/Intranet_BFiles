@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/CPU-commits/Intranet_BFiles/controllers"
@@ -18,10 +19,12 @@ import (
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"gopkg.in/natefinch/lumberjack.v2"
 
 	// swaggerFiles "github.com/swaggo/files"     // swagger embed files
 	// ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func keyFunc(c *gin.Context) string {
@@ -47,17 +50,35 @@ func Init() {
 	router := gin.New()
 	// Proxies
 	router.SetTrustedProxies([]string{"localhost"})
-	// Zap looger
-	logger, err := zap.NewProduction()
-	if err != nil {
-		panic(err)
+	// Zap logger
+	// Create folder if not exists
+	if _, err := os.Stat("logs"); os.IsNotExist(err) {
+		err := os.Mkdir("logs", os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
 	}
-	router.Use(ginzap.GinzapWithConfig(logger, &ginzap.Config{
+	// Log file
+	logEncoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+	fileCore := zapcore.NewCore(logEncoder, zapcore.AddSync(&lumberjack.Logger{
+		Filename:   "logs/app.log",
+		MaxSize:    10,
+		MaxBackups: 3,
+		MaxAge:     7,
+	}), zap.InfoLevel)
+	// Log console
+	consoleEncoder := zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig())
+	consoleCore := zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zap.InfoLevel)
+	// Combine cores for multi-output logging
+	teeCore := zapcore.NewTee(fileCore, consoleCore)
+	zapLogger := zap.New(teeCore)
+
+	router.Use(ginzap.GinzapWithConfig(zapLogger, &ginzap.Config{
 		TimeFormat: time.RFC3339,
 		UTC:        true,
-		SkipPaths:  []string{"/api/c/classroom/swagger"},
+		SkipPaths:  []string{"/api/annoucements/swagger"},
 	}))
-	router.Use(ginzap.RecoveryWithZap(logger, true))
+	router.Use(ginzap.RecoveryWithZap(zapLogger, true))
 
 	router.Use(gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
 		if err, ok := recovered.(string); ok {
