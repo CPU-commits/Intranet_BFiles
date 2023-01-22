@@ -150,7 +150,16 @@ func Init() {
 	})
 	router.Use(mw)
 	// Routes
-	files := router.Group("/api/files", middlewares.JWTMiddleware())
+	files := router.Group(
+		"/api/files",
+		middlewares.JWTMiddleware(),
+		middlewares.MaxSizePerFile(
+			MAX_FILE_SIZE,
+			MAX_FILE_SIZE_STR,
+			MAX_FILES,
+			"file",
+		),
+	)
 	{
 		// Init controllers
 		filesController := new(controllers.FilesController)
