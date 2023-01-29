@@ -50,7 +50,7 @@ func (f *FilesModel) Transaction(todo func() error) error {
 		}
 		err = todo()
 		if err != nil {
-			return nil
+			return err
 		}
 		return nil
 	})
