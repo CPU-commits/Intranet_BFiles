@@ -11,6 +11,7 @@ import (
 	"github.com/CPU-commits/Intranet_BFiles/db"
 	"github.com/CPU-commits/Intranet_BFiles/forms"
 	"github.com/CPU-commits/Intranet_BFiles/models"
+	"github.com/CPU-commits/Intranet_BFiles/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -198,12 +199,20 @@ func (f *FilesService) UploadFile(
 		}
 	}
 	// Upload db
+	var mimeFile string
+	extFile := "." + ext[len(ext)-1]
+	if utils.IsCodeFile(extFile) {
+		mimeFile = utils.GetCodeFileMime(extFile)
+	} else {
+		mimeFile = mime.TypeByExtension(extFile)
+	}
+
 	return f.uploadFileDB(
 		filename,
 		key,
 		out.Location,
 		fileData.Title,
-		mime.TypeByExtension("."+ext[len(ext)-1]),
+		mimeFile,
 		idUser,
 	)
 }
