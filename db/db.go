@@ -52,7 +52,10 @@ func NewMongoClient(host string) *mongo.Client {
 		host,
 	)
 	if settingsData.MONGO_CONNECTION != "mongodb+srv" {
-		uri += strconv.Itoa(settingsData.MONGO_PORT)
+		uri += fmt.Sprintf(
+			":%s",
+			strconv.Itoa(settingsData.MONGO_PORT),
+		)
 	}
 
 	clientOptions := options.Client().ApplyURI(uri)
